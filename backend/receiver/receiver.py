@@ -24,7 +24,7 @@ class FileStore:
 
 class SessionManager:
     
-    def __int__(self):
+    def __init__(self):
         self.file_store=FileStore()
      
     def start_session(self,conn:socket.socket,addr):
@@ -55,20 +55,26 @@ class Receiver:
     def __init__(self,port=2121):
         self.host=socket.gethostname()
         self.port=port
-        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.receiver = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.manager = SessionManager()
         
     def start(self):
-        self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server.bind((self.host, self.port))
-        self.server.listen(5)
+        self.receiver.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.receiver.bind((self.host, self.port))
+        self.receiver.listen(5)
         print(f"Listening on {self.host}:{self.port}")
-        while True:
-            conn, addr = self.server.accept()
-            try:
-                self.manager.start_session(conn, addr)
-            finally:
-                conn.close()
-                self.server.close()
+        try:
+            while True:
+                conn, addr = self.receiver.accept()
+                try:
+                    self.manager.start_session(conn, addr)
+                except Exception as e:
+                    print(f"Session Error: {e}")
+                finally:
+                    conn.close() 
+        finally:
+            self.receiver.close()
     
-
+res.find_sender()
+receiver= Receiver()
+receiver.start()

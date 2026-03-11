@@ -1,6 +1,6 @@
 import socket
 
-def find_receiver():
+def find_sender():
     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) 
     client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
     client.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -14,4 +14,4 @@ def find_receiver():
             break
         
 if __name__=="__main__":
-    find_receiver()
+    find_sender()

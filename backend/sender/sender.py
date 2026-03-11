@@ -33,51 +33,58 @@ class Sender:
     def __init__(self,port=2121,*filenames):
         self.receiver_ip=req.get_ip()
         self.receiver_port=port
-        self.client=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sender=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.files=[]
         for name in filenames:
             self.files.append(name)
         
     def start(self):
         try:
-            self.client.connect((self.receiver_ip, self.receiver_port))
-            self.client.sendall(b"Want to receive file")
-            msg = self.client.recv(1024).decode()
+            self.sender.connect((self.receiver_ip, self.receiver_port))
+            self.sender.sendall(b"Want to receive file")
+            msg = self.sender.recv(1024).decode()
             if msg != "Yes":
                 return False
             
             auth = Authenticate()
             print(f"DEBUG: OTP for {self.receiver_ip} is {auth.otp}")
-            self.client.sendall(b"Enter OTP")
-            self.receiver_otp = self.client.recv(1024).decode().strip()
+            self.sender.sendall(b"Enter OTP")
+            self.receiver_otp = self.sender.recv(1024).decode().strip()
             
             success, message = auth.isValid(self.receiver_otp)
-            self.client.sendall(message.encode())
+            self.sender.sendall(message.encode())
+            time.sleep(0.1)
             
             if success:
                 self.send_all()
         finally:
-            self.client.close()
+            self.sender.close()
             print("Connection closed.")
     
     def send_all(self):
-        self.client.sendall(f"COUNT:{len(self.files)}".encode())
+        self.sender.sendall(f"COUNT:{len(self.files)}".encode())
         time.sleep(0.1)
         for name in self.files:
+            time.sleep(0.1)
             self.send_file(name)
         
     def send_file(self,filename):
         filesize = os.path.getsize(filename)
         header = f"{os.path.basename(filename)}|{filesize}"
-        self.client.sendall(header.encode())
+        self.sender.sendall(header.encode())
         
         # to receive acknowledgemnet
-        self.client.recv(1024)
+        self.sender.recv(1024)
         
         with open(filename, "rb") as f:
             while True:
                 data = f.read(4096)
                 if not data:
                     break
-                self.client.sendall(data)
+                self.sender.sendall(data)
         print(f"Sent {filename}")
+        
+my_files=["example.txt","/home/jay/Documents/book.pdf"]
+
+sender=Sender(2121,*my_files)
+sender.start()
