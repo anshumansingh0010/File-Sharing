@@ -71,6 +71,7 @@ class Sender:
         header = f"{os.path.basename(filename)}|{filesize}"
         self.client.sendall(header.encode())
         
+        # to receive acknowledgemnet
         self.client.recv(1024)
         
         with open(filename, "rb") as f:
