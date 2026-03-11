@@ -1,0 +1,46 @@
+.main-container {
+    padding: 20px;
+}
+
+.big-icon {
+    font-size: 96pt;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: @accent_bg_color;
+}
+
+.title-label {
+    font-size: 24pt;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
+
+.description-label {
+    font-size: 11pt;
+    opacity: 0.7;
+    margin-bottom: 30px;
+    color: @window_fg_color;
+}
+
+.primary-button {
+    border-radius: 20px;
+    padding: 10px 30px;
+    font-weight: bold;
+    color: @accent_fg_color;
+    background-color: @accent_bg_color;
+}
+
+.secondary-button {
+    border-radius: 20px;
+    padding: 10px 30px;
+    border: 1px solid color-mix(in srgb, @accent_bg_color, transparent 30%);
+
+    background-color: @button_bg_color;
+}
+
+.code-entry {
+    border-radius: 10px;
+    padding: 5px 10px;
+    margin-bottom: 15px;
+    background-color: @card_bg_color;
+}

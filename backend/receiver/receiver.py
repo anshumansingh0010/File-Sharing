@@ -64,7 +64,7 @@ class Receiver:
         self.receiver.listen(5)
         print(f"Listening on {self.host}:{self.port}")
         try:
-            while True:
+            # while True: 
                 conn, addr = self.receiver.accept()
                 try:
                     self.manager.start_session(conn, addr)

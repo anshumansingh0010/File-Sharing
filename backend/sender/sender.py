@@ -84,7 +84,7 @@ class Sender:
                 self.sender.sendall(data)
         print(f"Sent {filename}")
         
-my_files=["example.txt","/home/jay/Documents/book.pdf"]
+my_files=["example.txt","/home/jay/Downloads/Documents/11-2-26.pdf","/home/jay/Downloads/Documents/AI_mid.pdf"]
 
 sender=Sender(2121,*my_files)
 sender.start()
