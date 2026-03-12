@@ -193,10 +193,8 @@ class SenderPage(Adw.Bin):
         print(f"Sending Folders: {self.selected_folders}")
         
         # Implementation for sending
-        self.user_sender_thread=threading.Thread(target=self.sender_thread,args=(self.selected_files,),daemon=True)
+        self.user_sender_thread=threading.Thread(target=self.sender_thread,args=(self.lbl_status.set_label,self.selected_files,),daemon=True)
         self.user_sender_thread.start()
-        
-        self.lbl_status.set_label("Sending started...")
 
     def on_files_selected(self, dialog, result):
         try:
@@ -220,6 +218,6 @@ class SenderPage(Adw.Bin):
         except Exception as e:
             print(f"Folder selection failed: {e}")
 
-    def sender_thread(self,files):
+    def sender_thread(self,label,files):
         user_sender=Sender(2121,*files)
-        user_sender.start()
+        user_sender.start(label)

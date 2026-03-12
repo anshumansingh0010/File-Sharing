@@ -1,3 +1,4 @@
+import threading
 import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -37,8 +38,8 @@ class ReceivePage(Adw.Bin):
         self.code_entry.set_halign(Gtk.Align.CENTER)
         self.code_entry.set_width_chars(30)
         self.code_entry.add_css_class("code-entry")
+        # self.code_entry.connect("")
         self.main_box.append(self.code_entry)
-
         # Receive File Button
         self.btn_receive = Gtk.Button(label="Receive File")
         self.btn_receive.add_css_class("primary-button")
@@ -47,9 +48,10 @@ class ReceivePage(Adw.Bin):
         self.btn_receive.set_size_request(250, -1)
         self.btn_receive.connect("clicked", self.on_receive_clicked)
         self.main_box.append(self.btn_receive)
+        self.recieve_event=threading.Event()
         
-
+    def get_otp(self):
+        return self.code
     def on_receive_clicked(self, button):
-        code = self.code_entry.get_text()
-        if code:
-            print(f"Receiving file with code: {code}")
+        self.code = self.code_entry.get_text()
+        self.recieve_event.set()

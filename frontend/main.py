@@ -53,13 +53,18 @@ class MainWindow(Adw.ApplicationWindow):
     def on_view_changed(self,stack,pspec):
         current_page=stack.get_visible_child_name()
         if current_page == "receive":
+            
             user_receiver_thread=threading.Thread(target=self.receiver_thread,daemon=True)
             user_receiver_thread.start()
-            
+    def get_otp(self):
+        while not self.receive_page.recieve_event.is_set():
+            pass
+        self.receive_page.recieve_event.clear()
+        return   self.receive_page.get_otp()   
     def receiver_thread(self):
         user_receiver=Receiver()
-        user_receiver.start()
-            
+        user_receiver.start(self.get_otp)
+              
 
 class FileTransferApp(Adw.Application):
     def __init__(self):

@@ -38,17 +38,16 @@ class Sender:
         for name in filenames:
             self.files.append(name)
         
-    def start(self):
+    def start(self,label):
         try:
             self.sender.connect((self.receiver_ip, self.receiver_port))
             self.sender.sendall(b"Want to receive file")
             msg = self.sender.recv(1024).decode()
-            if msg != "Yes":
+            if not msg.startswith("Yes"):
                 return False
             
             auth = Authenticate()
-            print(f"DEBUG: OTP for {self.receiver_ip} is {auth.otp}")
-            self.sender.sendall(b"Enter OTP")
+            label(f"OTP for {msg[3:]} is {auth.otp}")
             self.receiver_otp = self.sender.recv(1024).decode().strip()
             
             success, message = auth.isValid(self.receiver_otp)
@@ -57,6 +56,7 @@ class Sender:
             
             if success:
                 self.send_all()
+                label(f"Successfully Sent to {msg[3:]}")
         finally:
             self.sender.close()
             print("Connection closed.")

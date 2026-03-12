@@ -26,13 +26,13 @@ class SessionManager:
     def __init__(self):
         self.file_store=FileStore()
      
-    def start_session(self,conn:socket.socket,addr):
+    def start_session(self,conn:socket.socket,addr,getOtp):
         print(f"Connected by {addr}")
         if conn.recv(1024).decode()== "Want to receive file":
-            conn.sendall(b"Yes")
+            conn.sendall(f"Yes{socket.gethostname()}".encode())
         
         print(conn.recv(1024).decode())
-        otp=input()
+        otp=getOtp()
         conn.sendall(otp.encode())
         
         auth_res=conn.recv(1024).decode()
@@ -58,7 +58,7 @@ class Receiver:
         self.manager = SessionManager()
         res.find_sender()
         
-    def start(self):
+    def start(self,getOtp):
         self.receiver.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.receiver.bind((self.host, self.port))
         self.receiver.listen(5)
@@ -67,7 +67,7 @@ class Receiver:
             # while True: 
                 conn, addr = self.receiver.accept()
                 try:
-                    self.manager.start_session(conn, addr)
+                    self.manager.start_session(conn, addr,getOtp)
                 except Exception as e:
                     print(f"Session Error: {e}")
                 finally:
