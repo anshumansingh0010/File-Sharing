@@ -48,6 +48,7 @@ class Sender:
             
             auth = Authenticate()
             label(f"OTP for {msg[3:]} is {auth.otp}")
+            self.sender.sendall(b"Enter OTP")
             self.receiver_otp = self.sender.recv(1024).decode().strip()
             
             success, message = auth.isValid(self.receiver_otp)
