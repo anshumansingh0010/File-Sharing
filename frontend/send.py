@@ -1,5 +1,6 @@
 import gi
 import os
+import threading
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, Gio, Pango
@@ -191,9 +192,9 @@ class SenderPage(Adw.Bin):
         print(f"Sending Files: {self.selected_files}")
         print(f"Sending Folders: {self.selected_folders}")
         
-        # Implementation for sending 
-        user_sender=Sender(2121,*(self.selected_files))
-        user_sender.start()
+        # Implementation for sending
+        self.user_sender_thread=threading.Thread(target=self.sender_thread,args=(self.selected_files,),daemon=True)
+        self.user_sender_thread.start()
         
         self.lbl_status.set_label("Sending started...")
 
@@ -218,3 +219,7 @@ class SenderPage(Adw.Bin):
                     self.add_item_to_list(folder.get_path())
         except Exception as e:
             print(f"Folder selection failed: {e}")
+
+    def sender_thread(self,files):
+        user_sender=Sender(2121,*files)
+        user_sender.start()

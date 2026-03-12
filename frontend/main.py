@@ -1,10 +1,12 @@
 import gi
 import os
+import threading
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, Gio, Gdk
 from frontend.send import SenderPage
 from frontend.receive import ReceivePage
+from backend import Receiver
 
 class MainWindow(Adw.ApplicationWindow):
     def __init__(self, **kwargs):
@@ -22,6 +24,7 @@ class MainWindow(Adw.ApplicationWindow):
 
         # View Stack as the main content
         self.view_stack = Adw.ViewStack()
+        self.view_stack.connect("notify::visible-child-name", self.on_view_changed)
         
         self.view_switcher = Adw.ViewSwitcher()
         self.view_switcher.set_stack(self.view_stack)
@@ -46,6 +49,17 @@ class MainWindow(Adw.ApplicationWindow):
         )
 
         self.toolbar_view.set_content(self.view_stack)
+        
+    def on_view_changed(self,stack,pspec):
+        current_page=stack.get_visible_child_name()
+        if current_page == "receive":
+            user_receiver_thread=threading.Thread(target=self.receiver_thread,daemon=True)
+            user_receiver_thread.start()
+            
+    def receiver_thread(self):
+        user_receiver=Receiver()
+        user_receiver.start()
+            
 
 class FileTransferApp(Adw.Application):
     def __init__(self):

@@ -1,9 +1,8 @@
 import gi
-import asyncio
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw
-from backend import Receiver
+
 
 class ReceivePage(Adw.Bin):
     def __init__(self, **kwargs):
@@ -48,9 +47,9 @@ class ReceivePage(Adw.Bin):
         self.btn_receive.set_size_request(250, -1)
         self.btn_receive.connect("clicked", self.on_receive_clicked)
         self.main_box.append(self.btn_receive)
-        # user_receiver=Receiver()
-        # user_receiver.start()
+        
 
     def on_receive_clicked(self, button):
         code = self.code_entry.get_text()
-        print(f"Receiving file with code: {code}")
+        if code:
+            print(f"Receiving file with code: {code}")
