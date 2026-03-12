@@ -1,10 +1,10 @@
 import gi
+import os
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, Gio, Gdk
-from send import SenderPage
-from receive import ReceivePage
-import os
+from frontend.send import SenderPage
+from frontend.receive import ReceivePage
 
 class MainWindow(Adw.ApplicationWindow):
     def __init__(self, **kwargs):
@@ -12,7 +12,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.set_default_size(450, 800)
         self.set_title("File Transfer")
 
-        # Replace the Content Box with a ToolbarView
+        # ToolbarView
         self.toolbar_view = Adw.ToolbarView()
         self.set_content(self.toolbar_view)
 
@@ -59,7 +59,6 @@ class FileTransferApp(Adw.Application):
         self.load_css()
 
         # AdwStyleManager handles the theme scheme automatically.
-        # Minimal setup to avoid warnings.
         style_manager = self.get_style_manager()
         style_manager.set_color_scheme(Adw.ColorScheme.DEFAULT)
 
@@ -82,7 +81,3 @@ class FileTransferApp(Adw.Application):
         if not win:
             win = MainWindow(application=self)
         win.present()
-
-if __name__ == "__main__":
-    app = FileTransferApp()
-    app.run(None)

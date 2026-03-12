@@ -1,7 +1,6 @@
 import socket
 import os
-import res
-
+from backend.receiver import res
 
 class FileStore:
     
@@ -57,6 +56,7 @@ class Receiver:
         self.port=port
         self.receiver = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.manager = SessionManager()
+        res.find_sender()
         
     def start(self):
         self.receiver.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -74,7 +74,3 @@ class Receiver:
                     conn.close() 
         finally:
             self.receiver.close()
-    
-res.find_sender()
-receiver= Receiver()
-receiver.start()

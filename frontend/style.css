@@ -33,8 +33,7 @@
 .secondary-button {
     border-radius: 20px;
     padding: 10px 30px;
-    border: 1px solid color-mix(in srgb, @accent_bg_color, transparent 30%);
-
+    border: 1px solid alpha(@accent_bg_color, 0.5);
     background-color: @button_bg_color;
 }
 

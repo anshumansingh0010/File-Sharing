@@ -1,8 +1,9 @@
 import gi
+import os
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, Gio, Pango
-import os
+from backend import Sender
 
 class SenderPage(Adw.Bin):
     def __init__(self, **kwargs):
@@ -189,7 +190,11 @@ class SenderPage(Adw.Bin):
     def on_send_clicked(self, button):
         print(f"Sending Files: {self.selected_files}")
         print(f"Sending Folders: {self.selected_folders}")
-        # Implementation for sending will go here
+        
+        # Implementation for sending 
+        user_sender=Sender(2121,*(self.selected_files))
+        user_sender.start()
+        
         self.lbl_status.set_label("Sending started...")
 
     def on_files_selected(self, dialog, result):

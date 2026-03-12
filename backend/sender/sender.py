@@ -3,7 +3,7 @@ import random
 import string
 import time
 import os
-import req
+from backend.sender import req
 
 class Authenticate:
     
@@ -84,7 +84,3 @@ class Sender:
                 self.sender.sendall(data)
         print(f"Sent {filename}")
         
-my_files=["example.txt","/home/jay/Downloads/Documents/11-2-26.pdf","/home/jay/Downloads/Documents/AI_mid.pdf"]
-
-sender=Sender(2121,*my_files)
-sender.start()
