@@ -53,9 +53,12 @@ class MainWindow(Adw.ApplicationWindow):
     def on_view_changed(self,stack,pspec):
         current_page=stack.get_visible_child_name()
         if current_page == "receive":
-            
+            self.sender_page.stop_search()
             user_receiver_thread=threading.Thread(target=self.receiver_thread,daemon=True)
             user_receiver_thread.start()
+        elif current_page == "sender":
+            self.sender_page.start_search()
+            
     def get_otp(self):
         while not self.receive_page.recieve_event.is_set():
             pass
@@ -69,7 +72,7 @@ class MainWindow(Adw.ApplicationWindow):
 class FileTransferApp(Adw.Application):
     def __init__(self):
         super().__init__(application_id="com.anshuman.FileSharing",
-                         flags=Gio.ApplicationFlags.FLAGS_NONE)
+                         flags=Gio.ApplicationFlags.NON_UNIQUE)
 
     def do_startup(self):
         Adw.Application.do_startup(self)

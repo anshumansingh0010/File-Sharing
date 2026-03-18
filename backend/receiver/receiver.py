@@ -71,6 +71,8 @@ class Receiver:
                 except Exception as e:
                     print(f"Session Error: {e}")
                 finally:
+                    print("Connection closed.")
                     conn.close() 
         finally:
             self.receiver.close()
+            print("Receiver Stopped")

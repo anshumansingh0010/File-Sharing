@@ -3,7 +3,6 @@ import random
 import string
 import time
 import os
-from backend.sender import req
 
 class Authenticate:
     
@@ -30,8 +29,8 @@ class Authenticate:
     
     
 class Sender:
-    def __init__(self,port=2121,*filenames):
-        self.receiver_ip=req.get_ip()
+    def __init__(self,ip,port=2121,*filenames):
+        self.receiver_ip=ip
         self.receiver_port=port
         self.sender=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.files=[]

@@ -1,4 +1,3 @@
-import time
 import psutil
 import socket
 
@@ -15,27 +14,26 @@ def get_broadcast_address():
     return '<broadcast>'
 
 
-def get_ip():
+def get_ip(stop_signal,receiver_list):
     server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    server.settimeout(0.2)
-    target_ip=None
-    message = (f"your very important message from {socket.gethostname()}").encode()
-    while True:
-        server.sendto(message, (get_broadcast_address(), 37020))
+    server.settimeout(1.0)
+    message = socket.gethostname().encode()
+    broadcast_addr=get_broadcast_address()
+    while not stop_signal.is_set():
+        server.sendto(message, (broadcast_addr, 37020))
+        print("message sent!")
         
-        time.sleep(1)
         try:
             data,addr=server.recvfrom(1024)
             if data:
                 target_ip=addr[0]
-                break
-        except:
-            print("message sent!")
+                host_name=data.decode()
+                receiver_list.put({host_name,target_ip})
+        except socket.timeout:
             continue
-    print(target_ip)
-    return target_ip
+        except Exception as e:
+            print(f"An error occured : {e}")
 
-if __name__=="__main__":
-    get_ip()
+
