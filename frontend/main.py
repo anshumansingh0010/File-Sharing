@@ -3,7 +3,7 @@ import os
 import threading
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, Gio, Gdk
+from gi.repository import Gtk, Adw, Gio, Gdk, GLib
 from frontend.send import SenderPage
 from frontend.receive import ReceivePage
 from backend import Receiver
@@ -65,8 +65,38 @@ class MainWindow(Adw.ApplicationWindow):
         self.receive_page.recieve_event.clear()
         return   self.receive_page.get_otp()   
     def receiver_thread(self):
-        user_receiver=Receiver()
-        user_receiver.start(self.get_otp)
+        try:
+            user_receiver = Receiver()
+            user_receiver.start(self.get_otp)
+            # All files received — show the completion dialog on the main thread
+            GLib.idle_add(self.show_receive_complete_dialog)
+        except Exception as e:
+            print(f"Receiver error: {e}")
+
+    def show_receive_complete_dialog(self):
+        dialog = Adw.AlertDialog(
+            heading="Transfer Complete",
+            body="All files have been received successfully.",
+        )
+        dialog.add_response("send", "Send")
+        dialog.add_response("receive_again", "Receive Again")
+        dialog.set_response_appearance("send", Adw.ResponseAppearance.SUGGESTED)
+        dialog.set_response_appearance("receive_again", Adw.ResponseAppearance.SUGGESTED)
+        dialog.add_css_class("complete-dialog")
+        dialog.set_default_response("receive_again")
+        dialog.connect("response", self.on_receive_complete_response)
+        dialog.present(self)
+        return GLib.SOURCE_REMOVE
+
+    def on_receive_complete_response(self, dialog, response):
+        if response == "receive_again":
+            # Reset the receive page UI and start listening again
+            self.receive_page.reset()
+            new_thread = threading.Thread(target=self.receiver_thread, daemon=True)
+            new_thread.start()
+        elif response == "send":
+            # Switch to the Send tab
+            self.view_stack.set_visible_child_name("sender")
               
 
 class FileTransferApp(Adw.Application):

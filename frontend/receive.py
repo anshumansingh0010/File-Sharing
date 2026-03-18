@@ -52,6 +52,12 @@ class ReceivePage(Adw.Bin):
         
     def get_otp(self):
         return self.code
+
     def on_receive_clicked(self, button):
         self.code = self.code_entry.get_text()
         self.recieve_event.set()
+
+    def reset(self):
+        """Clear the entry and reset the event so a new session can start."""
+        self.code_entry.set_text("")
+        self.recieve_event.clear()

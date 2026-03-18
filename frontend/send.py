@@ -252,8 +252,9 @@ class SenderPage(Adw.Bin):
                 self.stop_signal.set()
             
     def on_back_clicked(self, button):
-        self.receiver_list.unselect_all()
+        self.receiver_list.remove_all()
         self.receiver_ip = None
+        self.start_search()
         self.view_stack.set_visible_child_name("receivers")
 
     def on_select_file_clicked(self, button):
