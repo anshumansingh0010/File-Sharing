@@ -1,3 +1,11 @@
+/* Fallback definitions based on the provided UI image */
+@define-color accent_bg_color #a5b4fc;   /* Light indigo/purple for icons/buttons */
+@define-color accent_fg_color #1e1e2e;   /* Dark text for use on accent background */
+@define-color window_bg_color #1e1e2e;   /* Main dark background */
+@define-color window_fg_color #ffffff;   /* Primary white text */
+@define-color card_bg_color   #28283d;   /* Slightly lighter dark for inputs/cards */
+@define-color button_bg_color #31314d;   /* Secondary button background */
+
 .main-container {
     padding: 20px;
 }
