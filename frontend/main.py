@@ -54,11 +54,9 @@ class MainWindow(Adw.ApplicationWindow):
         current_page=stack.get_visible_child_name()
         if current_page == "receive":
             self.sender_page.stop_search()
-            self.receiver_stop_signal=threading.Event()
-            user_receiver_thread=threading.Thread(target=self.receiver_thread,args=(self.receiver_stop_signal,),daemon=True)
+            user_receiver_thread=threading.Thread(target=self.receiver_thread,daemon=True)
             user_receiver_thread.start()
         elif current_page == "sender":
-            self.receiver_stop_signal.set()
             self.sender_page.start_search()
             
     def get_otp(self):
