@@ -2,19 +2,26 @@ import threading
 import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw
+from gi.repository import Gtk, Adw, GLib
 
 
 class ReceivePage(Adw.Bin):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.code = ""
+
+        # Use Adw.Clamp for responsive, centered layout matching SenderPage
+        self.clamp = Adw.Clamp()
+        self.clamp.set_maximum_size(450)
+        self.clamp.set_tightening_threshold(300)
+        self.set_child(self.clamp)
 
         # Main Layout
-        self.main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        self.main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15)
         self.main_box.set_valign(Gtk.Align.CENTER)
         self.main_box.set_halign(Gtk.Align.CENTER)
         self.main_box.add_css_class("main-container")
-        self.set_child(self.main_box)
+        self.clamp.set_child(self.main_box)
 
         # Large Icon
         self.icon = Gtk.Image.new_from_icon_name("folder-download-symbolic")
@@ -32,14 +39,20 @@ class ReceivePage(Adw.Bin):
         self.desc_lbl.add_css_class("description-label")
         self.main_box.append(self.desc_lbl)
 
+        # Status Label
+        self.status_lbl = Gtk.Label(label="Waiting for connection...")
+        self.status_lbl.add_css_class("dim-label")
+        self.main_box.append(self.status_lbl)
+
         # Transmit Code Entry
         self.code_entry = Gtk.Entry()
         self.code_entry.set_placeholder_text("Transmit Code")
         self.code_entry.set_halign(Gtk.Align.CENTER)
         self.code_entry.set_width_chars(30)
         self.code_entry.add_css_class("code-entry")
-        # self.code_entry.connect("")
+        self.code_entry.connect("activate", self.on_receive_clicked)
         self.main_box.append(self.code_entry)
+
         # Receive File Button
         self.btn_receive = Gtk.Button(label="Receive File")
         self.btn_receive.add_css_class("primary-button")
@@ -48,16 +61,24 @@ class ReceivePage(Adw.Bin):
         self.btn_receive.set_size_request(250, -1)
         self.btn_receive.connect("clicked", self.on_receive_clicked)
         self.main_box.append(self.btn_receive)
-        self.recieve_event=threading.Event()
-        
+
+        self.recieve_event = threading.Event()
+
+    def set_status(self, text):
+        GLib.idle_add(self.status_lbl.set_label, text)
+
     def get_otp(self):
         return self.code
 
-    def on_receive_clicked(self, button):
-        self.code = self.code_entry.get_text()
-        self.recieve_event.set()
+    def on_receive_clicked(self, widget):
+        self.code = self.code_entry.get_text().strip()
+        if self.code:
+            self.set_status("Code submitted. Authenticating...")
+            self.recieve_event.set()
 
     def reset(self):
         """Clear the entry and reset the event so a new session can start."""
+        self.code = ""
         self.code_entry.set_text("")
+        self.status_lbl.set_label("Waiting for connection...")
         self.recieve_event.clear()

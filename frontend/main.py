@@ -11,6 +11,9 @@ from backend import Receiver
 class MainWindow(Adw.ApplicationWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.active_receiver = None
+        self.user_receiver_thread = None
+
         self.set_default_size(450, 800)
         self.set_title("File Transfer")
 
@@ -24,8 +27,7 @@ class MainWindow(Adw.ApplicationWindow):
 
         # View Stack as the main content
         self.view_stack = Adw.ViewStack()
-        self.view_stack.connect("notify::visible-child-name", self.on_view_changed)
-        
+
         self.view_switcher = Adw.ViewSwitcher()
         self.view_switcher.set_stack(self.view_stack)
         self.view_switcher.set_policy(Adw.ViewSwitcherPolicy.WIDE)
@@ -48,30 +50,69 @@ class MainWindow(Adw.ApplicationWindow):
             "folder-download-symbolic"
         )
 
+        self.view_stack.connect("notify::visible-child-name", self.on_view_changed)
+        self.connect("close-request", self.on_close_request)
         self.toolbar_view.set_content(self.view_stack)
+
+    def on_close_request(self, window):
+        self.sender_page.stop_search()
+        self.stop_receiver()
+        return False
         
-    def on_view_changed(self,stack,pspec):
-        current_page=stack.get_visible_child_name()
+    def on_view_changed(self, stack, pspec):
+        current_page = stack.get_visible_child_name()
         if current_page == "receive":
             self.sender_page.stop_search()
-            user_receiver_thread=threading.Thread(target=self.receiver_thread,daemon=True)
-            user_receiver_thread.start()
+            if self.active_receiver is None:
+                self.receive_page.reset()
+                self.start_receiver()
         elif current_page == "sender":
+            self.stop_receiver()
             self.sender_page.start_search()
+
+    def start_receiver(self):
+        self.active_receiver = Receiver()
+        self.user_receiver_thread = threading.Thread(target=self.receiver_thread, daemon=True)
+        self.user_receiver_thread.start()
+
+    def stop_receiver(self):
+        if self.active_receiver is not None:
+            try:
+                self.active_receiver.stop()
+            except Exception:
+                pass
+            self.active_receiver = None
             
     def get_otp(self):
-        while not self.receive_page.recieve_event.is_set():
-            pass
+        self.receive_page.recieve_event.wait()
         self.receive_page.recieve_event.clear()
-        return   self.receive_page.get_otp()   
+        return self.receive_page.get_otp()   
+
     def receiver_thread(self):
+        rec = self.active_receiver
+        if not rec:
+            return
         try:
-            user_receiver = Receiver()
-            user_receiver.start(self.get_otp)
-            # All files received — show the completion dialog on the main thread
-            GLib.idle_add(self.show_receive_complete_dialog)
+            rec.start(self.get_otp)
+            if self.active_receiver == rec:
+                GLib.idle_add(self.show_receive_complete_dialog)
         except Exception as e:
-            print(f"Receiver error: {e}")
+            if self.active_receiver == rec:
+                print(f"Receiver error: {e}")
+                GLib.idle_add(self.show_receive_error_dialog, str(e))
+        finally:
+            if self.active_receiver == rec:
+                self.active_receiver = None
+
+    def show_receive_error_dialog(self, error_msg):
+        dialog = Adw.AlertDialog(
+            heading="Transfer Failed",
+            body=f"Failed to receive file:\n{error_msg}",
+        )
+        dialog.add_response("close", "Close")
+        dialog.set_default_response("close")
+        dialog.present(self)
+        return GLib.SOURCE_REMOVE
 
     def show_receive_complete_dialog(self):
         dialog = Adw.AlertDialog(
@@ -92,11 +133,12 @@ class MainWindow(Adw.ApplicationWindow):
         if response == "receive_again":
             # Reset the receive page UI and start listening again
             self.receive_page.reset()
-            new_thread = threading.Thread(target=self.receiver_thread, daemon=True)
-            new_thread.start()
+            self.start_receiver()
         elif response == "send":
             # Switch to the Send tab
             self.view_stack.set_visible_child_name("sender")
+
+
               
 
 class FileTransferApp(Adw.Application):

@@ -189,13 +189,14 @@ class SenderPage(Adw.Bin):
                 item = self.shared_queue.get_nowait()
                 # req.get_ip pushes a set: {host_name, target_ip}
                 # let's turn it into a list for deterministic unpacking
-                if isinstance(item, set) and len(item) == 2:
+                if isinstance(item, (set, tuple, list)) and len(item) == 2:
                     lst = list(item)
                     # We don't know which is IP and which is hostname. A simple check is looking for '.'
                     if "." in lst[0] and not any(c.isalpha() for c in lst[0]):
                         ip, hostname = lst[0], lst[1]
                     else:
                         hostname, ip = lst[0], lst[1]
+
                 else:
                     # In case the format changes
                     continue
@@ -253,7 +254,11 @@ class SenderPage(Adw.Bin):
             
     def on_back_clicked(self, button):
         self.receiver_list.remove_all()
+        self.row_data.clear()
+        if hasattr(self, 'known_receivers'):
+            self.known_receivers.clear()
         self.receiver_ip = None
+        self.scrolled_receiver_window.set_visible(False)
         self.start_search()
         self.view_stack.set_visible_child_name("receivers")
 
@@ -359,7 +364,16 @@ class SenderPage(Adw.Bin):
         print(f"Sending Folders: {self.selected_folders}")
         
         # Implementation for sending
-        self.user_sender_thread=threading.Thread(target=self.sender_thread,args=(self.lbl_status.set_label,self.selected_files,),daemon=True)
+        all_items = self.selected_files + self.selected_folders
+        
+        def safe_label(text):
+            GLib.idle_add(self.lbl_status.set_label, text)
+
+        self.user_sender_thread = threading.Thread(
+            target=self.sender_thread,
+            args=(safe_label, all_items),
+            daemon=True
+        )
         self.user_sender_thread.start()
 
     def on_files_selected(self, dialog, result):
@@ -384,6 +398,6 @@ class SenderPage(Adw.Bin):
         except Exception as e:
             print(f"Folder selection failed: {e}")
 
-    def sender_thread(self,label,files):
-        user_sender=Sender(self.receiver_ip, 2121,*files)
+    def sender_thread(self, label, files):
+        user_sender = Sender(self.receiver_ip, 2121, *files)
         user_sender.start(label)
