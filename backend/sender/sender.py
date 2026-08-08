@@ -81,8 +81,9 @@ class Sender:
             send_line(self.sender, "Want to receive file")
             msg = recv_line(self.sender, buf)
             if not msg.startswith("Yes"):
-                label("Handshake failed: Invalid response")
-                return False
+                err = "Handshake failed: Invalid response"
+                label(err)
+                return False, err
             
             auth = Authenticate()
             receiver_name = msg[3:]
@@ -94,23 +95,29 @@ class Sender:
             send_line(self.sender, message)
             
             if success:
-                self.send_all(buf)
-                label(f"Successfully Sent to {receiver_name}")
-                return True
+                self.send_all(buf, label)
+                success_msg = f"Successfully sent {len(self.files)} item(s) to {receiver_name}."
+                label(success_msg)
+                return True, success_msg
             else:
-                label(f"Transfer Failed: {message}")
-                return False
+                fail_msg = f"Transfer Failed: {message}"
+                label(fail_msg)
+                return False, fail_msg
         except Exception as e:
             print(f"Sender Error: {e}")
-            label(f"Error: {e}")
-            return False
+            err_msg = f"Error: {e}"
+            label(err_msg)
+            return False, err_msg
         finally:
             self.sender.close()
             print("Connection closed.")
     
-    def send_all(self, buf: bytearray):
-        send_line(self.sender, f"COUNT:{len(self.files)}")
-        for full_path, rel_name in self.files:
+    def send_all(self, buf: bytearray, label=None):
+        total = len(self.files)
+        send_line(self.sender, f"COUNT:{total}")
+        for idx, (full_path, rel_name) in enumerate(self.files, 1):
+            if label:
+                label(f"Sending {rel_name} ({idx}/{total})...")
             self.send_file(full_path, rel_name, buf)
         
     def send_file(self, full_path, rel_name, buf):
@@ -119,7 +126,7 @@ class Sender:
         
         ack = recv_line(self.sender, buf)
         if ack != "ACK":
-            print(f"Expected ACK from receiver, got: {ack}")
+            raise ConnectionError(f"Expected ACK from receiver, got: {ack}")
         
         with open(full_path, "rb") as f:
             while True:
@@ -128,5 +135,6 @@ class Sender:
                     break
                 self.sender.sendall(data)
         print(f"Sent {rel_name}")
+
 
         

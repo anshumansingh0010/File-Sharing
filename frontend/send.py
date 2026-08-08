@@ -176,9 +176,12 @@ class SenderPage(Adw.Bin):
     def stop_search(self):
         if hasattr(self, 'stop_signal'):
             self.stop_signal.set()
-        if hasattr(self, 'timeout_id'):
-            GLib.source_remove(self.timeout_id)
-            del self.timeout_id
+        if hasattr(self, 'timeout_id') and self.timeout_id is not None:
+            try:
+                GLib.source_remove(self.timeout_id)
+            except Exception:
+                pass
+            self.timeout_id = None
             
     def start_search(self):
         self.broadcast_request()
@@ -208,9 +211,11 @@ class SenderPage(Adw.Bin):
             pass
             
         if self.stop_signal.is_set():
+            self.timeout_id = None
             return False # Stop polling
             
         return True # Continue polling
+
         
     def add_receiver_to_list(self, hostname, ip):
         self.scrolled_receiver_window.set_visible(True)
@@ -363,8 +368,13 @@ class SenderPage(Adw.Bin):
         print(f"Sending Files: {self.selected_files}")
         print(f"Sending Folders: {self.selected_folders}")
         
-        # Implementation for sending
         all_items = self.selected_files + self.selected_folders
+        if not all_items:
+            return
+            
+        self.btn_send.set_sensitive(False)
+        self.btn_select_file.set_sensitive(False)
+        self.btn_select_folder.set_sensitive(False)
         
         def safe_label(text):
             GLib.idle_add(self.lbl_status.set_label, text)
@@ -400,4 +410,21 @@ class SenderPage(Adw.Bin):
 
     def sender_thread(self, label, files):
         user_sender = Sender(self.receiver_ip, 2121, *files)
-        user_sender.start(label)
+        success, message = user_sender.start(label)
+        GLib.idle_add(self.on_send_finished, success, message)
+
+    def on_send_finished(self, success, message):
+        self.btn_send.set_sensitive(True)
+        self.btn_select_file.set_sensitive(True)
+        self.btn_select_folder.set_sensitive(True)
+
+        dialog = Adw.AlertDialog(
+            heading="Transfer Complete" if success else "Transfer Failed",
+            body=message,
+        )
+        dialog.add_response("ok", "OK")
+        dialog.set_default_response("ok")
+        native = self.get_native()
+        if isinstance(native, Gtk.Window):
+            dialog.present(native)
+        return GLib.SOURCE_REMOVE

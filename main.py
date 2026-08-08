@@ -1,6 +1,8 @@
-
 from frontend.main import FileTransferApp
 
-if __name__ == "__main__":
+def main():
     app = FileTransferApp()
-    app.run(None)
+    return app.run(None)
+
+if __name__ == "__main__":
+    main()

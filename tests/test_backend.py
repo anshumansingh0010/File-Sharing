@@ -114,7 +114,7 @@ class TestBackend(unittest.TestCase):
                 captured_otp.append(otp)
 
         sender = Sender("127.0.0.1", 2125, test_file)
-        success = sender.start(label_callback)
+        success, msg = sender.start(label_callback)
 
         rec_thread.join(timeout=3)
         self.assertTrue(success)
@@ -150,11 +150,12 @@ class TestBackend(unittest.TestCase):
             status_logs.append(msg)
 
         sender = Sender("127.0.0.1", 2126, test_file)
-        success = sender.start(label_callback)
+        success, msg = sender.start(label_callback)
 
         rec_thread.join(timeout=3)
         self.assertFalse(success)
         self.assertTrue(any("Transfer Failed" in log for log in status_logs))
+
 
     def test_udp_discovery_filters_self(self):
         stop_discovery = threading.Event()
